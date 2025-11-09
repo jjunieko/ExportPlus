@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+  schemas   = ["public", "auth"]
+}
+
+model users {
+  id         String    @id @default(uuid())
+  email      String?
+  created_at DateTime?
+  perfil     perfis?   @relation("UserPerfil")
+
+  @@map("users")
+  @@schema("auth")
+}
+
+model perfis {
+  id         String   @id @default(uuid())
+  cpf        String   @unique
+  nome       String
+  email      String?
+  telefone   String?
+  senha      String?
+  created_at DateTime @default(now())
+
+  auth_user users?      @relation("UserPerfil", fields: [id], references: [id], onDelete: Cascade)
+
+  enderecos enderecos[]
+  logs      user_logs[]
+
+  @@schema("public")
+}
+
+model enderecos {
+  id          String  @id @default(uuid())
+  usuario_id  String
+  cep         String
+  logradouro  String
+  numero      String
+  complemento String?
+  bairro      String
+  cidade      String
+  estado      String
+
+  usuario perfis @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model user_logs {
+  id         String   @id @default(uuid())
+  usuario_id String
+  alteracoes Json
+  criado_em  DateTime @default(now())
+
+  usuario perfis @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
